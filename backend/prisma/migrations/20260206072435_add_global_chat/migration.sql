@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "GlobalMessage" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "content" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "senderId" INTEGER NOT NULL,
+    CONSTRAINT "GlobalMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User" ("userID") ON DELETE RESTRICT ON UPDATE CASCADE
+);

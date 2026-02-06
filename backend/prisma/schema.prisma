@@ -1,0 +1,86 @@
+// File: backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 1. Model USER
+model User {
+  userID       Int     @id @default(autoincrement())
+  email        String  @unique
+  password     String
+  nama         String
+  
+  // Atribut Tambahan (Rekening)
+  noRekening   String? 
+  namaBank     String?
+  atasNama     String?
+
+  // Relasi
+  requests     JastipRequest[]
+  pembayarans  Pembayaran[]
+  
+  // Chat Private (Lama)
+  chatsSent    ChatSession[]   @relation("Sender")
+  chatsRecv    ChatSession[]   @relation("Receiver")
+
+  // --- PERBAIKAN: Chat Global (Baru) ---
+  // Baris ini wajib ada agar relasi di GlobalMessage valid
+  globalChats  GlobalMessage[]
+}
+
+// 2. Model JASTIP
+model JastipRequest {
+  requestID     Int     @id @default(autoincrement())
+  namaBarang    String
+  hargaEstimasi Float
+  status        String  @default("Pending")
+  
+  userID        Int
+  user          User    @relation(fields: [userID], references: [userID])
+  
+  pembayaran    Pembayaran?
+}
+
+// 3. Model PEMBAYARAN
+model Pembayaran {
+  paymentID     Int      @id @default(autoincrement())
+  jumlahBayar   Float
+  metodeBayar   String
+  status        String   @default("Pending")
+  tanggal       DateTime @default(now())
+
+  userID        Int
+  user          User     @relation(fields: [userID], references: [userID])
+
+  requestID     Int      @unique
+  request       JastipRequest @relation(fields: [requestID], references: [requestID])
+}
+
+// 4. Model CHAT PRIVATE
+model ChatSession {
+  chatID         Int      @id @default(autoincrement())
+  messageContent String
+  timestamp      DateTime @default(now())
+
+  senderID       Int
+  receiverID     Int
+  sender         User     @relation("Sender", fields: [senderID], references: [userID])
+  receiver       User     @relation("Receiver", fields: [receiverID], references: [userID])
+}
+
+// 5. Model CHAT GLOBAL
+model GlobalMessage {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  channel   String   @default("general-chat")
+  
+  senderId  Int
+  sender    User     @relation(fields: [senderId], references: [userID])
+}
